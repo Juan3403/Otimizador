@@ -336,6 +336,18 @@ public static class SelfTest
             return $"API do GitHub respondeu: última versão do repositório de teste = {r.Info.Tag}";
         });
 
+        Check("Atualização: Release real do projeto (baixar e conferir)", () =>
+        {
+            var r = Task.Run(() => UpdateService.CheckAsync(default, AppInfo.DefaultRepo)).GetAwaiter().GetResult();
+            if (r.State is UpdateState.Error or UpdateState.NoRelease) return $"ignorado ({r.State}: {r.Message})";
+            var info = r.Info ?? throw new Exception("sem dados da Release");
+            if (info.InstallerUrl is null || info.ZipUrl is null || info.ChecksumsUrl is null)
+                throw new Exception("a Release não tem instalador, zip e SHA256SUMS.txt");
+            var path = Task.Run(() => UpdateService.DownloadAsync(info, info.InstallerUrl, null, CancellationToken.None)).GetAwaiter().GetResult();
+            var size = new FileInfo(path).Length / 1048576;
+            File.Delete(path);
+            return $"{info.Tag} ({r.State}): baixou o instalador ({size} MB) e o SHA-256 bateu";
+        });
         Check("Limpeza agendada: próximo horário", () =>
         {
             var last = new DateTime(2026, 10, 23, 15, 0, 0); // sexta
@@ -455,6 +467,7 @@ public static class SelfTest
         public void Report(T value) => handler(value);
     }
 }
+
 
 
 
