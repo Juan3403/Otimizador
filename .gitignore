@@ -1,0 +1,17 @@
+# Compilação
+bin/
+obj/
+*_wpftmp.csproj
+publish/
+publish-folder/
+dist/
+
+# Editor / usuário
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Dados locais do app (não vão para o repositório)
+Dados/
+*.log

@@ -1,0 +1,98 @@
+﻿<UserControl x:Class="Otimizador.App.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Otimizador.App"
+             xmlns:vm="clr-namespace:Otimizador.App.ViewModels"
+             Style="{StaticResource PageRoot}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,14,28" MaxWidth="900" HorizontalAlignment="Left">
+
+            <!-- Destaque -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="28,26">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="68" Height="68" Background="{DynamicResource HeroBrush}" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" Foreground="White" FontSize="32" HorizontalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="20,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{app:Tr AppName}" FontSize="30" FontWeight="Bold" />
+                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource Body}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="{app:Tr About_Tagline}" Style="{StaticResource Body}" FontSize="13.5" Margin="0,18,0,0" />
+
+                    <Border Margin="0,22,0,0" Padding="18,14" Background="{DynamicResource CardRaised}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Command="{Binding OpenAuthorCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE8A7;" FontSize="13" />
+                                    <TextBlock Text="{app:Tr About_Github}" Margin="9,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{app:Tr About_MadeBy}" Style="{StaticResource Caption}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding Author}" FontSize="22" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding AuthorHandle}" Style="{StaticResource Body}" Margin="12,0,0,0" VerticalAlignment="Bottom" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <WrapPanel Margin="0,16,0,0">
+                        <Button Command="{Binding OpenRepoCommand}" Margin="0,0,10,8">
+                            <TextBlock Text="{app:Tr About_Repo}" />
+                        </Button>
+                        <Button Command="{Binding OpenReleasesCommand}" Margin="0,0,10,8">
+                            <TextBlock Text="{app:Tr About_Releases}" />
+                        </Button>
+                        <Button Command="{Binding OpenIssuesCommand}" Margin="0,0,10,8">
+                            <TextBlock Text="{app:Tr About_Issues}" />
+                        </Button>
+                    </WrapPanel>
+                    <TextBlock Text="{app:Tr About_Star}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Licença -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="22,18">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Command="{Binding OpenLicenseCommand}" VerticalAlignment="Center">
+                        <TextBlock Text="{app:Tr About_LicenseOpen}" />
+                    </Button>
+                    <StackPanel>
+                        <TextBlock Text="{app:Tr About_License}" Style="{StaticResource TitleMd}" />
+                        <TextBlock Text="{app:Tr About_LicenseText}" Style="{StaticResource Body}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Créditos -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="22,18">
+                <StackPanel>
+                    <TextBlock Text="{app:Tr About_Credits}" Style="{StaticResource TitleMd}" />
+                    <TextBlock Text="{app:Tr About_CreditsSub}" Style="{StaticResource Caption}" Margin="0,2,0,8" />
+                    <ItemsControl ItemsSource="{Binding Credits}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:Credit}">
+                                <Border BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,1,0,0" Padding="0,10">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="&#xE8A7;"
+                                                FontFamily="{StaticResource IconFont}" Padding="10,6"
+                                                Command="{Binding DataContext.OpenCreditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <ContentControl DockPanel.Dock="Right" Style="{StaticResource Chip}" Content="{Binding License}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Use}" Style="{StaticResource Caption}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,317 @@
+﻿<UserControl x:Class="Otimizador.App.Views.MonitorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Otimizador.App"
+             xmlns:ctl="clr-namespace:Otimizador.App.Controls"
+             Style="{StaticResource PageRoot}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,14,28">
+
+            <Border Style="{StaticResource CardFlat}" Margin="6,0,6,12" Padding="16,12"
+                    Background="{DynamicResource WarningSoft}" BorderBrush="{DynamicResource Warning}"
+                    Visibility="{Binding Hint, Converter={StaticResource S2V}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7BA;" Foreground="{DynamicResource Warning}" Margin="0,0,10,0" />
+                    <TextBlock Text="{Binding Hint}" Foreground="{DynamicResource Warning}" TextWrapping="Wrap" MaxWidth="820" />
+                </StackPanel>
+            </Border>
+
+            <!-- Overlay de métricas -->
+            <Border Style="{StaticResource Card}" Margin="6,0,6,6" Padding="20,16" DataContext="{Binding OverlaySettings}">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{app:Tr Ovl_Show}" Style="{StaticResource Body}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <CheckBox Style="{StaticResource SwitchCheck}" IsChecked="{Binding IsVisible}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Ovl_Title}" Style="{StaticResource TitleMd}" />
+                            <TextBlock Text="{app:Tr Ovl_Sub}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <WrapPanel Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,22,8">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding ShowCpu}" />
+                            <TextBlock Text="CPU" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,22,8">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding ShowGpu}" />
+                            <TextBlock Text="GPU" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,22,8">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding ShowRam}" />
+                            <TextBlock Text="RAM" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,30,8">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding ShowDisk}" />
+                            <TextBlock Text="{app:Tr Dash_Disk}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,30,8">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding IsLocked}" />
+                            <TextBlock Text="{app:Tr Ovl_Lock}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="{app:Tr Ovl_Size}" Style="{StaticResource Body}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <ListBox ItemsSource="{Binding Scales}" SelectedItem="{Binding Scale}" Style="{StaticResource Segmented}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBlock Text="{app:Tr Ovl_Hint}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+            <!-- Alertas -->
+            <Border Style="{StaticResource Card}" Margin="6,0,6,6" Padding="20,16" DataContext="{Binding AlertSettings}">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Command="{Binding TestCommand}" Margin="0,0,14,0">
+                                <TextBlock Text="{app:Tr Alert_TestButton}" />
+                            </Button>
+                            <CheckBox Style="{StaticResource SwitchCheck}" IsChecked="{Binding Enabled}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Alert_CardTitle}" Style="{StaticResource TitleMd}" />
+                            <TextBlock Text="{app:Tr Alert_CardSub}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <WrapPanel Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,30,8">
+                            <TextBlock Text="{app:Tr Alert_Cpu}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Button Content="−" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="cpu:-5" />
+                            <TextBlock Text="{Binding CpuLimit}" FontWeight="SemiBold" Width="42" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="cpu:5" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,30,8">
+                            <TextBlock Text="{app:Tr Alert_Gpu}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Button Content="−" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="gpu:-5" />
+                            <TextBlock Text="{Binding GpuLimit}" FontWeight="SemiBold" Width="42" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="gpu:5" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,30,8">
+                            <TextBlock Text="{app:Tr Alert_Disk}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Button Content="−" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="disk:-5" />
+                            <TextBlock Text="{Binding DiskMinFree}" FontWeight="SemiBold" Width="42" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="disk:5" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="{app:Tr Alert_Ram}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Button Content="−" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="ram:-5" />
+                            <TextBlock Text="{Binding RamLimit}" FontWeight="SemiBold" Width="42" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Style="{StaticResource StepButton}" Command="{Binding AdjustCommand}" CommandParameter="ram:5" />
+                        </StackPanel>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+            <!-- Gráficos -->
+            <UniformGrid Columns="3">
+                <Border Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Rectangle Width="8" Height="8" Fill="{DynamicResource Accent}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding CpuLoadText}" FontWeight="SemiBold" Margin="5,0,12,0" />
+                                <Rectangle Width="8" Height="8" Fill="{DynamicResource Orange}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding CpuTempText}" FontWeight="SemiBold" Margin="5,0,0,0" />
+                            </StackPanel>
+                            <TextBlock Text="{app:Tr Mon_Cpu}" Style="{StaticResource TitleMd}" />
+                        </DockPanel>
+                        <Grid Height="170" Margin="0,12,0,0">
+                            <ctl:Sparkline Values="{Binding CpuLoad}" Stroke="{DynamicResource Accent}" ShowGrid="True"
+                                           GridBrush="{DynamicResource ChartGrid}" />
+                            <ctl:Sparkline Values="{Binding CpuTemp}" Stroke="{DynamicResource Orange}" FillArea="False" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Rectangle Width="8" Height="8" Fill="{DynamicResource Teal}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding GpuLoadText}" FontWeight="SemiBold" Margin="5,0,12,0" />
+                                <Rectangle Width="8" Height="8" Fill="{DynamicResource Orange}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding GpuTempText}" FontWeight="SemiBold" Margin="5,0,0,0" />
+                            </StackPanel>
+                            <TextBlock Text="{app:Tr Mon_Gpu}" Style="{StaticResource TitleMd}" />
+                        </DockPanel>
+                        <Grid Height="170" Margin="0,12,0,0">
+                            <ctl:Sparkline Values="{Binding GpuLoad}" Stroke="{DynamicResource Teal}" ShowGrid="True"
+                                           GridBrush="{DynamicResource ChartGrid}" />
+                            <ctl:Sparkline Values="{Binding GpuTemp}" Stroke="{DynamicResource Orange}" FillArea="False" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Rectangle Width="8" Height="8" Fill="{DynamicResource Violet}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding RamText}" FontWeight="SemiBold" Margin="5,0,0,0" />
+                            </StackPanel>
+                            <TextBlock Text="{app:Tr Mon_Ram}" Style="{StaticResource TitleMd}" />
+                        </DockPanel>
+                        <Grid Height="170" Margin="0,12,0,0">
+                            <ctl:Sparkline Values="{Binding RamLoad}" Stroke="{DynamicResource Violet}" ShowGrid="True"
+                                           GridBrush="{DynamicResource ChartGrid}" />
+                        </Grid>
+                        <TextBlock Text="{Binding RamDetail}" Style="{StaticResource Caption}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Rede -->
+            <Border Style="{StaticResource Card}" Margin="6,6,6,0">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Rectangle Width="9" Height="9" Fill="{DynamicResource Accent}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding DownText}" FontWeight="SemiBold" Margin="6,0,16,0" />
+                            <Rectangle Width="9" Height="9" Fill="{DynamicResource Teal}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding UpText}" FontWeight="SemiBold" Margin="6,0,16,0" />
+                            <TextBlock Text="ping" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding PingText}" FontWeight="SemiBold" Margin="6,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="{app:Tr Net_Title}" Style="{StaticResource TitleMd}" />
+                    </DockPanel>
+                    <Grid Height="120" Margin="0,10,0,0">
+                        <ctl:Sparkline Values="{Binding DownHistory}" Stroke="{DynamicResource Accent}" Maximum="{Binding NetMax}"
+                                       ShowGrid="True" ShowLabels="True" GridBrush="{DynamicResource ChartGrid}" LabelBrush="{DynamicResource TextTertiary}" />
+                        <ctl:Sparkline Values="{Binding UpHistory}" Stroke="{DynamicResource Teal}" Maximum="{Binding NetMax}" FillArea="False" />
+                    </Grid>
+                    <TextBlock Text="{app:Tr Net_Unit}" Style="{StaticResource Caption}" Margin="0,4,0,10" />
+                    <TextBlock Text="{app:Tr Net_Connections}" Style="{StaticResource TitleSm}" Margin="0,4,0,6" />
+                    <ItemsControl ItemsSource="{Binding Connections}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardFlat}" Padding="12,8" Margin="0,0,8,8" MinWidth="170">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Style="{StaticResource Caption}">
+                                            <Run Text="{Binding Connections, Mode=OneWay}" /><Run Text=" " /><Run Text="{app:Tr Net_ConnWord}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            <!-- Núcleos da CPU -->
+            <Border Style="{StaticResource Card}" Margin="6,6,6,0">
+                <StackPanel>
+                    <TextBlock Text="{app:Tr Mon_Cores}" Style="{StaticResource TitleMd}" Margin="0,0,0,12" />
+                    <ItemsControl ItemsSource="{Binding Cores}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="4,0" ToolTip="{Binding Text}">
+                                    <TextBlock Text="{Binding Text}" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                                    <Grid Height="72" Margin="0,6,0,6" MaxWidth="34">
+                                        <Border Background="{DynamicResource Track}" CornerRadius="0" />
+                                        <Border Background="{DynamicResource Accent}" CornerRadius="0"
+                                                VerticalAlignment="Bottom" Height="{Binding BarHeight}" />
+                                    </Grid>
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Todos os sensores -->
+            <Border Style="{StaticResource Card}" Margin="6,6,6,0">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,6">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{app:Tr Mon_Record}" Style="{StaticResource Body}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <CheckBox Style="{StaticResource SwitchCheck}" IsChecked="{Binding IsRecording}" />
+                        </StackPanel>
+                        <TextBlock Text="{app:Tr Mon_All}" Style="{StaticResource TitleMd}" VerticalAlignment="Center" />
+                        <ContentControl Style="{StaticResource ChipAccent}" Content="{Binding SensorCount}" Margin="10,0,0,0"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <TextBlock Text="{Binding LogPath}" Style="{StaticResource Caption}" Margin="0,0,0,8"
+                               Visibility="{Binding LogPath, Converter={StaticResource S2V}}" />
+
+                    <ListBox ItemsSource="{Binding Filters}" SelectedItem="{Binding SelectedFilter}"
+                             Style="{StaticResource Segmented}" HorizontalAlignment="Left" Margin="0,4,0,10">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title.Text}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Grid Margin="0,4,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="64" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{app:Tr Mon_Sensor}" Style="{StaticResource Caption}" />
+                        <TextBlock Grid.Column="2" Text="{app:Tr Mon_Now}" Style="{StaticResource Caption}" />
+                        <TextBlock Grid.Column="3" Text="{app:Tr Mon_Min}" Style="{StaticResource Caption}" />
+                        <TextBlock Grid.Column="4" Text="{app:Tr Mon_Max}" Style="{StaticResource Caption}" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding View}">
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource TitleSm}" Margin="0,14,0,4"
+                                                   Foreground="{DynamicResource Accent}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,0,0,1" Padding="0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="150" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="64" />
+                                            <ColumnDefinition Width="64" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding SensorName}" TextTrimming="CharacterEllipsis" />
+                                        <ProgressBar Grid.Column="1" Height="6" Margin="0,0,24,0" Value="{Binding Fraction, Mode=OneWay}"
+                                                     VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Now}" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Min}" Style="{StaticResource Caption}" />
+                                        <TextBlock Grid.Column="4" Text="{Binding Max}" Style="{StaticResource Caption}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+
+
+
+
+

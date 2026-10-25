@@ -1,0 +1,160 @@
+﻿<UserControl x:Class="Otimizador.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Otimizador.App"
+             Style="{StaticResource PageRoot}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,14,28">
+
+            <!-- Atualizações -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="20,16">
+                <StackPanel>
+                    <DockPanel>
+                        <ContentControl DockPanel.Dock="Right" Style="{StaticResource Chip}" Content="{Binding VersionText}" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_Updates}" Style="{StaticResource TitleMd}" />
+                            <TextBlock Text="{Binding InstallText}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <TextBlock Text="{app:Tr Set_Repo}" Style="{StaticResource Caption}" Margin="0,16,0,4" />
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Command="{Binding OpenRepoCommand}" Margin="8,0,0,0">
+                            <TextBlock Text="GitHub" />
+                        </Button>
+                        <TextBox Text="{Binding Repo, UpdateSourceTrigger=PropertyChanged}" MaxLength="140" />
+                    </DockPanel>
+                    <TextBlock Text="{Binding RepoHint}" Foreground="{DynamicResource Warning}" Style="{StaticResource Caption}" Margin="0,6,0,0"
+                               Visibility="{Binding RepoHint, Converter={StaticResource S2V}}" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <CheckBox Style="{StaticResource SwitchCheck}" IsChecked="{Binding AutoCheck}" />
+                        <TextBlock Text="{app:Tr Set_AutoCheck}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <WrapPanel Margin="0,14,0,0">
+                        <Button Command="{Binding CheckNowCommand}" Margin="0,0,10,8" IsEnabled="{Binding IsChecking, Converter={StaticResource NotBool}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" FontSize="13" />
+                                <TextBlock Text="{app:Tr Set_CheckNow}" Margin="9,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding UpdateNowCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,8"
+                                Visibility="{Binding UpdateAvailable, Converter={StaticResource B2V}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE896;" FontSize="13" />
+                                <TextBlock Text="{app:Tr Set_UpdateNow}" Margin="9,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding OpenReleaseCommand}" Style="{StaticResource GhostButton}" Margin="0,0,0,8"
+                                Visibility="{Binding UpdateAvailable, Converter={StaticResource B2V}}">
+                            <TextBlock Text="{app:Tr Set_ReleaseNotes}" />
+                        </Button>
+                    </WrapPanel>
+
+                    <ProgressBar Value="{Binding DownloadProgress, Mode=OneWay}" Margin="0,2,0,8"
+                                 Visibility="{Binding IsDownloading, Converter={StaticResource B2V}}" />
+                    <TextBlock Text="{Binding UpdateStatus}" TextWrapping="Wrap" FontWeight="SemiBold"
+                               Visibility="{Binding UpdateStatus, Converter={StaticResource S2V}}" />
+                    <TextBlock Text="{Binding Notes}" Style="{StaticResource Caption}" Margin="0,6,0,0"
+                               Visibility="{Binding Notes, Converter={StaticResource S2V}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Bandeja e inicialização -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="20,16">
+                <StackPanel>
+                    <TextBlock Text="{app:Tr Set_Tray}" Style="{StaticResource TitleMd}" />
+                    <TextBlock Text="{app:Tr Set_TraySub}" Style="{StaticResource Caption}" Margin="0,2,0,6" />
+
+                    <DockPanel Margin="0,10,0,0">
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding TrayEnabled}" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_TrayIcon}" FontWeight="SemiBold" />
+                            <TextBlock Text="{app:Tr Set_TrayIconSub}" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Margin="0,12,0,0">
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding CloseToTray}" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_CloseToTray}" FontWeight="SemiBold" />
+                            <TextBlock Text="{app:Tr Set_CloseToTraySub}" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Margin="0,12,0,0">
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding StartMinimized}" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_StartMin}" FontWeight="SemiBold" />
+                            <TextBlock Text="{app:Tr Set_StartMinSub}" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Margin="0,12,0,0">
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding RunAtLogon}" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_Logon}" FontWeight="SemiBold" />
+                            <TextBlock Text="{app:Tr Set_LogonSub}" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock Text="{Binding SystemStatus}" Style="{StaticResource Caption}" Margin="0,10,0,0"
+                               Visibility="{Binding SystemStatus, Converter={StaticResource S2V}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Modo jogo -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="20,16" DataContext="{Binding GameMode}">
+                <StackPanel>
+                    <DockPanel>
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding Enabled}" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_Game}" Style="{StaticResource TitleMd}" />
+                            <TextBlock Text="{app:Tr Set_GameSub}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Margin="0,14,0,0">
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding ShowOverlay}" />
+                        <TextBlock Text="{app:Tr Set_GameOverlay}" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0" Visibility="{Binding GameActive, Converter={StaticResource B2V}}">
+                        <ContentControl Style="{StaticResource ChipSuccess}" Content="{app:Tr Set_GameActive}" />
+                        <TextBlock Text="{Binding GameName}" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Limpeza agendada -->
+            <Border Style="{StaticResource Card}" Margin="6" Padding="20,16">
+                <StackPanel DataContext="{Binding Scheduled}">
+                    <DockPanel>
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsChecked="{Binding Enabled}" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Text="{app:Tr Set_Sched}" Style="{StaticResource TitleMd}" />
+                            <TextBlock Text="{app:Tr Set_SchedSub}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <WrapPanel Margin="0,14,0,0">
+                        <ListBox ItemsSource="{Binding DataContext.Weekdays, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 SelectedItem="{Binding DataContext.SelectedWeekday, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 Style="{StaticResource Segmented}" Margin="0,0,20,8">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title.Text}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="{app:Tr Set_SchedHour}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Button Content="−" Style="{StaticResource StepButton}" Command="{Binding AdjustHourCommand}" CommandParameter="-1" />
+                            <TextBlock Text="{Binding Hour, StringFormat={}{0:00}:00}" FontWeight="SemiBold" Width="64" TextAlignment="Center" VerticalAlignment="Center" />
+                            <Button Content="+" Style="{StaticResource StepButton}" Command="{Binding AdjustHourCommand}" CommandParameter="1" />
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding LastRunText}" Style="{StaticResource Caption}" Margin="0,4,0,0"
+                               Visibility="{Binding LastRunText, Converter={StaticResource S2V}}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+
+

@@ -1,0 +1,149 @@
+﻿<Window x:Class="Otimizador.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Otimizador.App"
+        xmlns:vm="clr-namespace:Otimizador.App.ViewModels"
+        xmlns:views="clr-namespace:Otimizador.App.Views"
+        xmlns:ctl="clr-namespace:Otimizador.App.Controls"
+        Style="{StaticResource AppWindow}" Icon="Assets/Otimizador.ico"
+        Title="Otimizador" Height="820" Width="1280" MinHeight="660" MinWidth="1020"
+        WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <!-- Botões de idioma: o idioma ativo fica destacado -->
+        <Style x:Key="LangButtonPt" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Padding" Value="8,8" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPortuguese}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="LangButtonEn" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Padding" Value="8,8" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEnglish}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}"><views:DashboardView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HardwareViewModel}"><views:HardwareView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MonitorViewModel}"><views:MonitorView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SpaceViewModel}"><views:SpaceView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CleanupViewModel}"><views:CleanupView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StartupViewModel}"><views:StartupView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryViewModel}"><views:HistoryView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SecurityViewModel}"><views:SecurityView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:InventoryViewModel}"><views:InventoryView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><views:SettingsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AboutViewModel}"><views:AboutView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TestViewModel}"><views:TestView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OptimizeViewModel}"><views:OptimizeView /></DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="248" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Menu lateral -->
+        <Border Background="{DynamicResource SidebarBg}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="16,22,16,18">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,26">
+                    <Border Width="40" Height="40" CornerRadius="0" Background="{DynamicResource HeroBrush}">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" Foreground="White" FontSize="18"
+                                   HorizontalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{app:Tr AppName}" FontSize="17" FontWeight="Bold" />
+                        <TextBlock Text="{Binding VersionText}" Style="{StaticResource Caption}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Rodapé -->
+                <StackPanel DockPanel.Dock="Bottom">
+                    <ContentControl Style="{StaticResource ChipSuccess}" HorizontalAlignment="Left" Margin="8,0,0,10"
+                                    Content="{Binding AdminText}"
+                                    Visibility="{Binding IsAdmin, Converter={StaticResource B2V}}" />
+                    <ContentControl Style="{StaticResource ChipWarning}" HorizontalAlignment="Left" Margin="8,0,0,10"
+                                    Content="{Binding AdminText}"
+                                    Visibility="{Binding IsAdmin, Converter={StaticResource IBV}}" />
+                    <Button Command="{Binding ToggleThemeCommand}" Style="{StaticResource GhostButton}" Padding="12,9"
+                            ToolTip="{app:Tr Theme_Toggle}" HorizontalContentAlignment="Left" Margin="0,0,0,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{Binding ThemeGlyph}" Width="22" />
+                            <TextBlock Text="{app:Tr Theme_Label}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <UniformGrid Rows="1">
+                        <Button Command="{Binding SetLanguageCommand}" CommandParameter="pt" Style="{StaticResource LangButtonPt}"
+                                ToolTip="Português (Brasil)" Margin="0,0,4,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <ctl:FlagBrazil />
+                                <TextBlock Text="PT" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding SetLanguageCommand}" CommandParameter="en" Style="{StaticResource LangButtonEn}"
+                                ToolTip="English (US)" Margin="4,0,0,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <ctl:FlagUsa />
+                                <TextBlock Text="EN" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding NavItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource NavButton}"
+                                    Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding Key}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Conteúdo -->
+        <Grid Grid.Column="1" Margin="34,26,22,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="0,0,12,20">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource ChipAccent}" Content="{Binding CpuChip}" Margin="0,0,8,0"
+                                    Visibility="{Binding CpuChip, Converter={StaticResource S2V}}" />
+                    <ContentControl Style="{StaticResource ChipAccent}" Content="{Binding GpuChip}" Margin="0,0,8,0"
+                                    Visibility="{Binding GpuChip, Converter={StaticResource S2V}}" />
+                    <ContentControl Style="{StaticResource ChipAccent}" Content="{Binding RamChip}"
+                                    Visibility="{Binding RamChip, Converter={StaticResource S2V}}" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="{Binding PageTitle}" Style="{StaticResource TitleLg}" />
+                    <TextBlock Text="{Binding PageSubtitle}" Style="{StaticResource Body}" Margin="0,2,0,0" />
+                </StackPanel>
+            </DockPanel>
+
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
+        </Grid>
+    </Grid>
+</Window>
+
+
+
+
+
+
+

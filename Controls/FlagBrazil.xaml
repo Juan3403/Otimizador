@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="Otimizador.App.Controls.FlagBrazil"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="26" Height="18" SnapsToDevicePixels="True">
+    <!-- Bandeira do Brasil (simplificada, vetorial) -->
+    <Border CornerRadius="0" ClipToBounds="True" BorderBrush="#33000000" BorderThickness="0.5">
+        <Viewbox Stretch="Fill">
+            <Canvas Width="100" Height="70">
+                <Rectangle Width="100" Height="70" Fill="#009C3B" />
+                <Polygon Points="50,6 94,35 50,64 6,35" Fill="#FFDF00" />
+                <Ellipse Canvas.Left="30" Canvas.Top="15" Width="40" Height="40" Fill="#002776" />
+                <Path Data="M 31,38 Q 50,28 69,36" Stroke="White" StrokeThickness="4.5" />
+            </Canvas>
+        </Viewbox>
+    </Border>
+</UserControl>
+

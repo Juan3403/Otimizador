@@ -1,0 +1,267 @@
+﻿<UserControl x:Class="Otimizador.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Otimizador.App"
+             xmlns:ctl="clr-namespace:Otimizador.App.Controls"
+             xmlns:vm="clr-namespace:Otimizador.App.ViewModels"
+             Style="{StaticResource PageRoot}">
+    <UserControl.Resources>
+        <DataTemplate x:Key="MetricCardTemplate" DataType="{x:Type vm:MetricCard}">
+            <Border Style="{StaticResource Card}" Margin="6" Padding="16,14">
+                <StackPanel>
+                    <DockPanel>
+                        <Border DockPanel.Dock="Left" Width="30" Height="30" CornerRadius="0"
+                                Background="{DynamicResource AccentSoft}">
+                            <TextBlock x:Name="IconGlyph" Style="{StaticResource Icon}" Text="{Binding Glyph}" FontSize="14"
+                                       Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding TempText}" DockPanel.Dock="Right" FontWeight="SemiBold" FontSize="13"
+                                   VerticalAlignment="Center"
+                                   Foreground="{Binding TempValue, Converter={StaticResource TempBrush}}"
+                                   Visibility="{Binding TempText, Converter={StaticResource S2V}}" />
+                        <TextBlock Text="{Binding Title.Text}" Style="{StaticResource TitleSm}" Margin="10,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <ctl:RingGauge x:Name="Ring" Height="112" Margin="0,14,0,10" Value="{Binding Percent}"
+                                   Text="{Binding PercentText}" SubText="{app:Tr Dash_Usage}"
+                                   TrackBrush="{DynamicResource Track}" ValueBrush="{DynamicResource Accent}"
+                                   TextBrush="{DynamicResource TextPrimary}" SubTextBrush="{DynamicResource TextTertiary}" />
+
+                    <Grid Height="20">
+                        <TextBlock Text="{Binding Line1}" Style="{StaticResource Caption}" HorizontalAlignment="Left" />
+                        <TextBlock Text="{Binding Line2}" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <ctl:Sparkline x:Name="Spark" Height="46" Margin="0,8,0,0" Values="{Binding History}"
+                                   Stroke="{DynamicResource Accent}" GridBrush="{DynamicResource ChartGrid}" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Gpu">
+                    <Setter TargetName="Ring" Property="ValueBrush" Value="{DynamicResource Teal}" />
+                    <Setter TargetName="Spark" Property="Stroke" Value="{DynamicResource Teal}" />
+                    <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource Teal}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Ram">
+                    <Setter TargetName="Ring" Property="ValueBrush" Value="{DynamicResource Violet}" />
+                    <Setter TargetName="Spark" Property="Stroke" Value="{DynamicResource Violet}" />
+                    <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource Violet}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Disk">
+                    <Setter TargetName="Ring" Property="ValueBrush" Value="{DynamicResource Orange}" />
+                    <Setter TargetName="Spark" Property="Stroke" Value="{DynamicResource Orange}" />
+                    <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource Orange}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,14,28">
+
+            <!-- Destaque -->
+            <Border Background="{DynamicResource HeroBrush}" CornerRadius="0" Padding="30,26" Margin="6,0,6,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{app:Tr Dash_Hero}" Foreground="#C8FFFFFF" FontSize="11.5" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding CpuName}" Foreground="White" FontSize="25" FontWeight="SemiBold"
+                                   Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding GpuName}" Foreground="#E8FFFFFF" FontSize="15" Margin="0,4,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding SystemLine}" Foreground="#BFFFFFFF" FontSize="12.5" Margin="0,4,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <ContentControl Style="{StaticResource ChipOnHero}" Content="{app:Tr Dash_TempOk}" Margin="0,0,8,0"
+                                            Visibility="{Binding TempAvailable, Converter={StaticResource B2V}}" />
+                            <ContentControl Style="{StaticResource ChipOnHero}" Content="{app:Tr Dash_TempOff}" Margin="0,0,8,0"
+                                            Visibility="{Binding TempAvailable, Converter={StaticResource IBV}}" />
+                            <ContentControl Style="{StaticResource ChipOnHero}" Content="{Binding UptimeText}" Margin="0,0,8,0"
+                                            Visibility="{Binding UptimeText, Converter={StaticResource S2V}}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
+                        <Button Style="{StaticResource HeroButton}" Command="{Binding GoCommand}" CommandParameter="Test"
+                                HorizontalContentAlignment="Left" Padding="18,11" Margin="0,0,0,8">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" FontSize="13" />
+                                <TextBlock Text="{app:Tr Dash_QuickTest}" Margin="10,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource HeroButton}" Command="{Binding GoCommand}" CommandParameter="Hardware"
+                                HorizontalContentAlignment="Left" Padding="18,11">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE770;" FontSize="13" />
+                                <TextBlock Text="{app:Tr Dash_SeeMyPc}" Margin="10,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Medidores -->
+            <ItemsControl ItemsSource="{Binding Cards}" ItemTemplate="{StaticResource MetricCardTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="4" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <!-- Atividade e ações -->
+            <Grid Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,12">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Rectangle Width="9" Height="9" Fill="{DynamicResource Accent}" />
+                                <TextBlock Text="CPU" Style="{StaticResource Caption}" Margin="6,0,14,0" />
+                                <Rectangle Width="9" Height="9" Fill="{DynamicResource Teal}" />
+                                <TextBlock Text="GPU" Style="{StaticResource Caption}" Margin="6,0,0,0" />
+                            </StackPanel>
+                            <TextBlock Text="{app:Tr Dash_Activity}" Style="{StaticResource TitleMd}" />
+                        </DockPanel>
+                        <Grid Height="190">
+                            <ctl:Sparkline Values="{Binding CpuLoadHistory}" Stroke="{DynamicResource Accent}"
+                                           GridBrush="{DynamicResource ChartGrid}" LabelBrush="{DynamicResource TextTertiary}"
+                                           ShowGrid="True" ShowLabels="True" Unit="%" Maximum="100" />
+                            <ctl:Sparkline Values="{Binding GpuLoadHistory}" Stroke="{DynamicResource Teal}"
+                                           ShowLabels="True" Unit="%" Maximum="100" FillArea="False" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <TextBlock Text="{app:Tr Dash_Actions}" Style="{StaticResource TitleMd}" Margin="0,0,0,12" />
+
+                        <Button Style="{StaticResource TileButton}" Command="{Binding GoCommand}" CommandParameter="Test" Margin="0,0,0,8">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="12"
+                                           Foreground="{DynamicResource TextTertiary}" />
+                                <Border DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="0" Background="{DynamicResource AccentSoft}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" />
+                                </Border>
+                                <StackPanel Margin="12,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{app:Tr Dash_QuickTest}" Style="{StaticResource TitleSm}" />
+                                    <TextBlock Text="{app:Tr Dash_QuickTestSub}" Style="{StaticResource Caption}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource TileButton}" Command="{Binding GoCommand}" CommandParameter="Optimize:safe" Margin="0,0,0,8">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="12"
+                                           Foreground="{DynamicResource TextTertiary}" />
+                                <Border DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="0" Background="{DynamicResource SuccessSoft}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE713;" Foreground="{DynamicResource Success}" HorizontalAlignment="Center" />
+                                </Border>
+                                <StackPanel Margin="12,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{app:Tr Dash_SafeProfile}" Style="{StaticResource TitleSm}" />
+                                    <TextBlock Text="{app:Tr Dash_SafeProfileSub}" Style="{StaticResource Caption}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource TileButton}" Command="{Binding GoCommand}" CommandParameter="Monitor">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="12"
+                                           Foreground="{DynamicResource TextTertiary}" />
+                                <Border DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="0" Background="{DynamicResource WarningSoft}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" Foreground="{DynamicResource Warning}" HorizontalAlignment="Center" />
+                                </Border>
+                                <StackPanel Margin="12,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{app:Tr Dash_Sensors}" Style="{StaticResource TitleSm}" />
+                                    <TextBlock Text="{app:Tr Dash_SensorsSub}" Style="{StaticResource Caption}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+                        <Button Style="{StaticResource TileButton}" Command="{Binding ToggleOverlayCommand}" Margin="0,8,0,0">
+                            <DockPanel>
+                                <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchCheck}" IsHitTestVisible="False" Focusable="False"
+                                          IsChecked="{Binding OverlaySettings.IsVisible, Mode=OneWay}" VerticalAlignment="Center" />
+                                <Border DockPanel.Dock="Left" Width="34" Height="34" Background="{DynamicResource AccentSoft}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE8A1;" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" />
+                                </Border>
+                                <StackPanel Margin="12,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{app:Tr Ovl_Title}" Style="{StaticResource TitleSm}" />
+                                    <TextBlock Text="Ctrl + Alt + O" Style="{StaticResource Caption}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Processos e resultados -->
+            <Grid Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <TextBlock Text="{app:Tr Dash_TopMemory}" Style="{StaticResource TitleMd}" />
+                        <TextBlock Text="{app:Tr Dash_TopMemorySub}" Style="{StaticResource Caption}" Margin="0,2,0,10" />
+                        <ItemsControl ItemsSource="{Binding TopProcesses}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="72" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        <ProgressBar Grid.Column="1" Value="{Binding Fraction, Mode=OneWay}" Height="7" Margin="8,0,12,0"
+                                                     VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding MemoryText}" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="6">
+                    <StackPanel>
+                        <TextBlock Text="{app:Tr Dash_LastResults}" Style="{StaticResource TitleMd}" Margin="0,0,0,12" />
+                        <TextBlock Text="{app:Tr Dash_NoResults}" Style="{StaticResource Body}"
+                                   Visibility="{Binding HasResults, Converter={StaticResource IBV}}" />
+                        <ItemsControl ItemsSource="{Binding Results}"
+                                      Visibility="{Binding HasResults, Converter={StaticResource B2V}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardFlat}" Padding="14,10" Margin="0,0,10,10" MinWidth="140">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Label.Text}" Style="{StaticResource Caption}" />
+                                            <TextBlock Text="{Binding Value}" FontSize="20" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+
+
+
