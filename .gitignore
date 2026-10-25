@@ -5,6 +5,8 @@ obj/
 publish/
 publish-folder/
 dist/
+Executavel/
+tools/cache/
 
 # Editor / usuário
 .vs/

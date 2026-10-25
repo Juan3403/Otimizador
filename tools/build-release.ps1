@@ -30,6 +30,7 @@ Remove-Item publish-folder, dist -Recurse -Force -ErrorAction SilentlyContinue
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish-folder
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish falhou' }
 if ($Repo) { Set-Content (Join-Path $root 'publish-folder\update-repo.txt') $Repo -Encoding ASCII }
+& (Join-Path $PSScriptRoot 'get-pawnio.ps1') -Dest (Join-Path $root 'publish-folder')   # driver da temperatura, já dentro do pacote
 
 # 3) instalador (Inno Setup)
 $iscc = @(

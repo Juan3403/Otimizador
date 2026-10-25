@@ -124,6 +124,20 @@ public partial class MonitorViewModel : PageViewModel
     [ObservableProperty] private string _ramText = "—";
     [ObservableProperty] private string _ramDetail = "";
     [ObservableProperty] private string _hint = "";
+    [ObservableProperty] private bool _canInstallDriver;
+    [ObservableProperty] private bool _installingDriver;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private async Task InstallDriverAsync()
+    {
+        if (InstallingDriver) return;
+        InstallingDriver = true;
+        Hint = Loc.T("PawnIo_Installing");
+        var result = await PawnIoInstaller.InstallAndRefreshAsync();
+        InstallingDriver = false;
+        CanInstallDriver = false;
+        Hint = result.Message;
+    }
     [ObservableProperty] private string _logPath = "";
     [ObservableProperty] private bool _isRecording;
     [ObservableProperty] private int _sensorCount;
@@ -220,7 +234,9 @@ public partial class MonitorViewModel : PageViewModel
         RamText = Fmt(s.RamLoad, "%");
         RamDetail = s.RamUsedGb is { } u && s.RamTotalGb is { } tot ? $"{u:0.0} / {tot:0.0} GB" : "";
 
+        CanInstallDriver = s.CpuTemp is null && PawnIoInstaller.CanInstall;
         Hint = s.CpuTemp is not null ? ""
+            : CanInstallDriver ? Loc.T("Mon_NoDriverBundled")
             : AppServices.IsAdmin && !SensorService.PawnIoInstalled() ? Loc.T("Mon_NoDriver")
             : AppServices.IsAdmin ? Loc.T("Mon_NoTemp")
             : Loc.T("Mon_NeedAdmin");

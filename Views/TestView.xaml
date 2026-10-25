@@ -48,6 +48,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- O que testar -->
@@ -230,6 +231,64 @@
                         <TextBlock Text="{Binding ResultText}" FontWeight="SemiBold" TextWrapping="Wrap" />
                     </Border>
                 </StackPanel>
+            </Border>
+
+            <!-- Renderização (CPU e GPU) -->
+            <Border Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource Card}" Margin="6" Padding="22">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="340" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Margin="0,0,24,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <Border Width="40" Height="40" CornerRadius="0" Background="{DynamicResource AccentSoft}">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE7B3;" FontSize="18" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" />
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="{app:Tr Test_Render}" Style="{StaticResource TitleMd}" Margin="14,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        </Grid>
+                        <TextBlock Text="{app:Tr Test_RenderSub}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,10,0,0" />
+
+                        <StackPanel Margin="0,16,0,0">
+                            <Button Command="{Binding RenderCpuCommand}" Style="{StaticResource PrimaryButton}" Padding="18,9" HorizontalContentAlignment="Left" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" FontSize="13" />
+                                    <TextBlock Text="{app:Tr Test_RenderCpu}" Margin="9,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding RenderCpu1Command}" Padding="18,9" HorizontalContentAlignment="Left" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" FontSize="13" />
+                                    <TextBlock Text="{app:Tr Test_RenderCpu1}" Margin="9,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding RenderGpuCommand}" Padding="18,9" HorizontalContentAlignment="Left" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" FontSize="13" />
+                                    <TextBlock Text="{app:Tr Test_RenderGpu}" Margin="9,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding CancelCommand}" Padding="18,9" HorizontalContentAlignment="Left"
+                                    Visibility="{Binding RenderRunning, Converter={StaticResource B2V}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE71A;" FontSize="12" />
+                                    <TextBlock Text="{app:Tr Test_Cancel}" Margin="9,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <ProgressBar Value="{Binding RenderProgress, Mode=OneWay}" Margin="0,12,0,6" />
+                        <TextBlock Text="{Binding RenderLive}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding RenderStatus}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,2,0,10" />
+                        <ItemsControl ItemsSource="{Binding RenderTiles}" ItemTemplate="{StaticResource ScoreTileTemplate}" HorizontalAlignment="Left" />
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Background="#000000" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" MinHeight="300">
+                        <Image Source="{Binding RenderImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Border>
+                </Grid>
             </Border>
         </Grid>
     </ScrollViewer>

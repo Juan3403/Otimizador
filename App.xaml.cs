@@ -8,6 +8,14 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        var renderOnly = Array.IndexOf(e.Args, "--rendertest");
+        if (renderOnly >= 0)
+        {
+            var path = renderOnly + 1 < e.Args.Length ? e.Args[renderOnly + 1] : "rendertest.txt";
+            Shutdown(SelfTest.RunRender(path));
+            return;
+        }
+
         var stressOnly = Array.IndexOf(e.Args, "--stresstest");
         if (stressOnly >= 0)
         {
@@ -48,6 +56,7 @@ public partial class App : Application
         _ = Cleanup.ScheduledCleanupService.Instance;   // limpeza semanal se estiver ligada
         Inventory.InventoryService.Start();             // publica o inventário se estiver ligado
         Updates.UpdateWatcher.Start();                  // procura versão nova no GitHub (no máximo 1 vez por dia)
+        Hardware.PawnIoInstaller.StartFirstRunPrompt(); // oferece o driver da temperatura (AMD) se faltar e estiver no pacote
         _ = Alerts.AlertService.Instance; // começa a vigiar temperaturas e disco
 
         var snap = Array.IndexOf(e.Args, "--snapshots");

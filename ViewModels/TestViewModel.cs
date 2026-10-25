@@ -88,6 +88,7 @@ public partial class TestViewModel : PageViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(QuickTestCommand), nameof(StressCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RenderCpuCommand), nameof(RenderCpu1Command), nameof(RenderGpuCommand))]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
     private bool _isBusy;
 
@@ -100,9 +101,9 @@ public partial class TestViewModel : PageViewModel
 
     private bool CanStart() => !IsBusy && HasSelection;
 
-    private void AddTile(BenchResult r, Dictionary<string, double> previous)
+    private void AddTile(BenchResult r, Dictionary<string, double> previous, ObservableCollection<ScoreTile>? target = null)
     {
-        string fmt = r.Unit == "GB/s" ? "0.0" : "0";
+        string fmt = r.Unit is "GB/s" or "FPS" ? "0.0" : "0";
         string prevText = "", deltaText = "";
         int kind = 0;
         if (previous.TryGetValue(r.Key, out var p) && p > 0)
@@ -112,7 +113,7 @@ public partial class TestViewModel : PageViewModel
             kind = Math.Abs(pct) < 0.5 ? 0 : pct > 0 ? 1 : -1;
             deltaText = $"{(pct >= 0 ? "+" : "")}{pct:0.0}%";
         }
-        Tiles.Add(new ScoreTile
+        (target ?? Tiles).Add(new ScoreTile
         {
             Title = new LocText(r.Key), Value = r.Value.ToString(fmt), Unit = r.Unit,
             PreviousText = prevText, DeltaText = deltaText, DeltaKind = kind,
@@ -285,6 +286,129 @@ public partial class TestViewModel : PageViewModel
             StressRunning = false;
             End();
         }
+    }
+
+    // Render (CPU e GPU), sempre 10 segundos
+    private static readonly TimeSpan RenderDuration = TimeSpan.FromSeconds(10);
+
+    public RenderSurface RenderData { get; } = new();
+
+    public ObservableCollection<ScoreTile> RenderTiles { get; } = new();
+
+    [ObservableProperty] private System.Windows.Media.Imaging.WriteableBitmap? _renderImage;
+    [ObservableProperty] private double _renderProgress;
+    [ObservableProperty] private string _renderStatus = "";
+    [ObservableProperty] private string _renderLive = "";
+    [ObservableProperty] private bool _renderRunning;
+
+    private bool CanRender() => !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanRender))]
+    private Task RenderCpuAsync() => RunRenderAsync(0);
+
+    [RelayCommand(CanExecute = nameof(CanRender))]
+    private Task RenderCpu1Async() => RunRenderAsync(1);
+
+    [RelayCommand(CanExecute = nameof(CanRender))]
+    private Task RenderGpuAsync() => RunRenderAsync(2);
+
+    private void RefreshRender(int kind)
+    {
+        var s = RenderData;
+        RenderProgress = Math.Min(100, s.Seconds / RenderDuration.TotalSeconds * 100);
+        RenderLive = kind == 2
+            ? $"{s.Fps:0.0} FPS · {s.Info} · {s.Passes} {Loc.T("quadros", "frames")}"
+            : $"{s.Rays / Math.Max(0.001, s.Seconds) / 1e4:0} pts · {s.Passes} {Loc.T("passadas", "passes")} · {s.Info}";
+
+        int w = s.Width, h = s.Height;
+        var px = s.Bgra;
+        if (w == 0 || px.Length != w * h * 4) return;
+        if (RenderImage is null || RenderImage.PixelWidth != w || RenderImage.PixelHeight != h)
+            RenderImage = new System.Windows.Media.Imaging.WriteableBitmap(w, h, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null);
+        RenderImage.WritePixels(new System.Windows.Int32Rect(0, 0, w, h), px, w * 4, 0);
+    }
+
+    private async Task RunRenderAsync(int kind)
+    {
+        Begin();
+        RenderRunning = true;
+        RenderTiles.Clear();
+        RenderProgress = 0;
+        RenderLive = "";
+        RenderStatus = kind switch
+        {
+            0 => Loc.T("Test_RenderCpuRun"),
+            1 => Loc.T("Test_RenderCpu1Run"),
+            _ => Loc.T("Test_RenderGpuRun"),
+        };
+        var surface = RenderData;
+        surface.Seconds = 0; surface.Rays = 0; surface.Passes = 0; surface.Fps = 0;
+        var ct = _cts!.Token;
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        timer.Tick += (_, _) => RefreshRender(kind);
+        timer.Start();
+        try
+        {
+            var previous = BenchHistory.Load();
+            BenchResult? result;
+            bool verified = true;
+            if (kind == 2)
+            {
+                result = await Task.Run(() => GpuRenderBenchmark.Run(RenderDuration, surface, ct));
+            }
+            else
+            {
+                var r = await Task.Run(() => CpuRenderBenchmark.Run(RenderDuration, kind == 0, surface, ct));
+                result = r.Score;
+                verified = r.Verified;
+            }
+            RefreshRender(kind);
+            if (ct.IsCancellationRequested)
+            {
+                RenderStatus = Loc.T("Test_Cancelled");
+            }
+            else if (result is null)
+            {
+                RenderStatus = Loc.T("Test_NoGpu");
+            }
+            else
+            {
+                AddTile(result, previous, RenderTiles);
+                BenchHistory.Save(new[] { result });
+                RenderStatus = verified ? Loc.T("Test_Done") : Loc.T("Test_RenderUnverified");
+                EventLog.Add("test", $"Render {(kind == 2 ? "GPU" : kind == 1 ? "CPU (1 núcleo)" : "CPU")}: {result.Value:0.#} {result.Unit}" +
+                                     (verified ? "" : "; conferência da imagem FALHOU"));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            RenderStatus = Loc.T("Test_Cancelled");
+        }
+        finally
+        {
+            timer.Stop();
+            RenderRunning = false;
+            End();
+        }
+    }
+
+    /// <summary>Preenche a tela com resultados de exemplo (usado só para gerar as imagens da documentação).</summary>
+    public void LoadDemo()
+    {
+        Tiles.Clear();
+        RenderTiles.Clear();
+        var none = new Dictionary<string, double>();
+        AddTile(new BenchResult("Test_CpuSingle", 1480, "pts"), none);
+        AddTile(new BenchResult("Test_CpuMulti", 18650, "pts"), none);
+        AddTile(new BenchResult("Test_Ram", 42.3, "GB/s"), none);
+        AddTile(new BenchResult("Test_GpuCompute", 9120, "GFLOPS"), none);
+        QuickProgress = 100;
+        QuickStatus = Loc.T("Test_Done");
+        CpuRenderBenchmark.Run(TimeSpan.FromSeconds(1.2), true, RenderData, CancellationToken.None);
+        RefreshRender(0);
+        RenderProgress = 100;
+        RenderStatus = Loc.T("Test_Done");
+        AddTile(new BenchResult("Test_CpuRender", RenderData.Rays / 1.2 / 1e4, "pts"), none, RenderTiles);
     }
 
     [RelayCommand]

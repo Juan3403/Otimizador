@@ -43,7 +43,7 @@ Atalho global: **Ctrl + Alt + O** liga/desliga o overlay de métricas.
    - **`Otimizador-Setup-x.y.z.exe`**: instalador (atalho no Menu Iniciar, desinstalador, atualiza sozinho).
    - **`Otimizador-Portatil-x.y.z.zip`**: extraia onde quiser e abra `Otimizador.exe` (os dados ficam na pasta `Dados`, ao lado do programa).
 2. O programa **pede permissão de administrador** ao abrir: ela é necessária para temperaturas, ajustes de sistema e saúde dos discos.
-3. Para a **temperatura de CPUs AMD Ryzen**, instale o driver opcional [PawnIO](https://github.com/namazso/PawnIO.Setup): `winget install namazso.PawnIO`. Ele só é carregado quando um programa o usa.
+3. Para a **temperatura de CPUs AMD Ryzen** o programa usa o driver [PawnIO](https://github.com/namazso/PawnIO) (GPL-2.0, de namazso), que **já vem dentro do pacote** (pasta `Drivers`, instalador oficial sem alteração, conferido por SHA-256 antes de rodar). No instalador há a opção "Instalar o driver PawnIO" (marcada por padrão); na versão portátil, ou se você pular a opção, o programa oferece instalar na primeira vez que a temperatura não aparecer, e há o botão "Instalar driver agora" na aba Monitorar. Nada para baixar à parte. Para remover: Configurações do Windows → Aplicativos → PawnIO.
 
 > **Aviso do Windows:** o programa **não é assinado digitalmente** (certificado de código é pago). Na primeira execução o SmartScreen pode mostrar "Windows protegeu o computador": clique em *Mais informações → Executar assim mesmo*. Em PCs com o **Smart App Control** ligado o Windows pode bloquear o arquivo; nesse caso é preciso desativar o Smart App Control (Segurança do Windows → Controle de aplicativos e navegador). O código é aberto: você pode revisar tudo e compilar por conta própria.
 

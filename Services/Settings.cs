@@ -23,6 +23,9 @@ public sealed class Settings
     public DateTime? LastUpdateCheck { get; set; }
     public string? LastNotifiedVersion { get; set; }
 
+    /// <summary>Já oferecemos instalar o driver PawnIO (a pergunta aparece uma única vez).</summary>
+    public bool PawnIoAsked { get; set; }
+
     // Bandeja e inicialização
     public bool TrayEnabled { get; set; } = true;
     public bool CloseToTray { get; set; }
