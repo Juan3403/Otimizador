@@ -40,6 +40,34 @@ public partial class TestViewModel : PageViewModel
 
     [ObservableProperty] private DurationOption _selectedDuration;
 
+    // Peças escolhidas (valem para o teste rápido e para o de estabilidade)
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(HasSelection))][NotifyCanExecuteChangedFor(nameof(QuickTestCommand), nameof(StressCommand))] private bool _useCpu = true;
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(HasSelection))][NotifyCanExecuteChangedFor(nameof(QuickTestCommand), nameof(StressCommand))] private bool _useRam = true;
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(HasSelection))][NotifyCanExecuteChangedFor(nameof(QuickTestCommand), nameof(StressCommand))] private bool _useGpu = true;
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(HasSelection))][NotifyCanExecuteChangedFor(nameof(QuickTestCommand), nameof(StressCommand))] private bool _useDisk = true;
+
+    public bool HasSelection => UseCpu || UseRam || UseGpu || UseDisk;
+
+    [ObservableProperty] private string _sensorHint = "";
+    [ObservableProperty] private string _gpuTempText = "—";
+    [ObservableProperty] private string _maxGpuTempText = "—";
+    [ObservableProperty] private double[] _gpuTempChart = Array.Empty<double>();
+    private readonly List<double> _gpuTempSeries = new();
+
+    private StressTargets Targets =>
+        (UseCpu ? StressTargets.Cpu : 0) | (UseRam ? StressTargets.Memory : 0) |
+        (UseGpu ? StressTargets.Gpu : 0) | (UseDisk ? StressTargets.Disk : 0);
+
+    private static string Names(StressTargets t)
+    {
+        var parts = new List<string>();
+        if (t.HasFlag(StressTargets.Cpu)) parts.Add("CPU");
+        if (t.HasFlag(StressTargets.Memory)) parts.Add("RAM");
+        if (t.HasFlag(StressTargets.Gpu)) parts.Add("GPU");
+        if (t.HasFlag(StressTargets.Disk)) parts.Add(Loc.T("Test_DiskName"));
+        return string.Join(", ", parts);
+    }
+
     // Teste rápido
     [ObservableProperty] private double _quickProgress;
     [ObservableProperty] private string _quickStatus = "";
@@ -70,7 +98,7 @@ public partial class TestViewModel : PageViewModel
 
     public TestViewModel() => _selectedDuration = Durations[0];
 
-    private bool CanStart() => !IsBusy;
+    private bool CanStart() => !IsBusy && HasSelection;
 
     private void AddTile(BenchResult r, Dictionary<string, double> previous)
     {
@@ -103,32 +131,46 @@ public partial class TestViewModel : PageViewModel
         {
             var previous = BenchHistory.Load();
             var results = new List<BenchResult>();
+            int steps = (UseCpu ? 2 : 0) + (UseRam ? 1 : 0) + (UseDisk ? 1 : 0) + (UseGpu ? 1 : 0);
+            int done = 0;
+            void Step() => QuickProgress = ++done * 100.0 / steps;
 
-            QuickStatus = Loc.T("Test_CpuSingle");
-            var r1 = await Task.Run(() => Benchmarks.CpuSingle(TimeSpan.FromSeconds(4), ct));
-            ct.ThrowIfCancellationRequested();
-            results.Add(r1); AddTile(r1, previous); QuickProgress = 17;
-
-            QuickStatus = Loc.T("Test_CpuMulti");
-            var r2 = await Task.Run(() => Benchmarks.CpuMulti(TimeSpan.FromSeconds(4), ct));
-            ct.ThrowIfCancellationRequested();
-            results.Add(r2); AddTile(r2, previous); QuickProgress = 34;
-
-            QuickStatus = Loc.T("Test_Ram");
-            var r3 = await Task.Run(() => Benchmarks.Memory(ct));
-            ct.ThrowIfCancellationRequested();
-            results.Add(r3); AddTile(r3, previous); QuickProgress = 51;
-
-            QuickStatus = Loc.T("Test_DiskW");
-            var (w, r) = await Task.Run(() => Benchmarks.Disk(ct));
-            ct.ThrowIfCancellationRequested();
-            results.Add(w); AddTile(w, previous);
-            results.Add(r); AddTile(r, previous);
-            QuickProgress = 68;
-
-            QuickStatus = Loc.T("Test_Gpu");
-            try
+            if (UseCpu)
             {
+                QuickStatus = Loc.T("Test_CpuSingle");
+                var r1 = await Task.Run(() => Benchmarks.CpuSingle(TimeSpan.FromSeconds(4), ct));
+                ct.ThrowIfCancellationRequested();
+                results.Add(r1); AddTile(r1, previous); Step();
+
+                QuickStatus = Loc.T("Test_CpuMulti");
+                var r2 = await Task.Run(() => Benchmarks.CpuMulti(TimeSpan.FromSeconds(4), ct));
+                ct.ThrowIfCancellationRequested();
+                results.Add(r2); AddTile(r2, previous); Step();
+            }
+
+            if (UseRam)
+            {
+                QuickStatus = Loc.T("Test_Ram");
+                var r3 = await Task.Run(() => Benchmarks.Memory(ct));
+                ct.ThrowIfCancellationRequested();
+                results.Add(r3); AddTile(r3, previous); Step();
+            }
+
+            if (UseDisk)
+            {
+                QuickStatus = Loc.T("Test_DiskW");
+                var (w, r) = await Task.Run(() => Benchmarks.Disk(ct));
+                ct.ThrowIfCancellationRequested();
+                results.Add(w); AddTile(w, previous);
+                results.Add(r); AddTile(r, previous);
+                Step();
+            }
+
+            if (UseGpu)
+            {
+                QuickStatus = Loc.T("Test_Gpu");
+                try
+                {
                 var gpu = await Task.Run(() => GpuBenchmark.Run(TimeSpan.FromSeconds(2.5), ct));
                 ct.ThrowIfCancellationRequested();
                 if (gpu is not null)
@@ -141,13 +183,17 @@ public partial class TestViewModel : PageViewModel
                     QuickStatus = Loc.T("Test_NoGpu");
                 }
             }
-            catch (InvalidOperationException ex)
-            {
-                Tiles.Add(new ScoreTile { Title = new LocText("Test_Gpu"), Value = "ERRO", Unit = "", PreviousText = ex.Message });
+                catch (InvalidOperationException ex)
+                {
+                    Tiles.Add(new ScoreTile { Title = new LocText("Test_Gpu"), Value = "ERRO", Unit = "", PreviousText = ex.Message });
+                }
+                Step();
             }
             QuickProgress = 100;
 
             BenchHistory.Save(results);
+            if (results.Count > 0)
+                EventLog.Add("test", "Teste rápido: " + string.Join("; ", results.Select(r => $"{Loc.T(r.Key)} {r.Value:0.#} {r.Unit}")));
             QuickStatus = Loc.T("Test_Done");
         }
         catch (OperationCanceledException)
@@ -171,12 +217,17 @@ public partial class TestViewModel : PageViewModel
         StressProgress = 0;
         _tempSeries.Clear();
         _loadSeries.Clear();
-        TempChart = LoadChart = Array.Empty<double>();
-        MaxTempText = TempText = "—";
+        _gpuTempSeries.Clear();
+        SensorHint = "";
+        TempChart = LoadChart = GpuTempChart = Array.Empty<double>();
+        MaxTempText = TempText = GpuTempText = MaxGpuTempText = "—";
         ErrorsText = "0";
 
         var ct = _cts!.Token;
         var duration = SelectedDuration.Value;
+        var targets = Targets;
+        var gpuMissing = false;
+        var failed = StressTargets.None;
         var progress = new Progress<StressStatus>(s =>
         {
             ElapsedText = $"{(int)s.Elapsed.TotalMinutes:00}:{s.Elapsed.Seconds:00}";
@@ -184,23 +235,50 @@ public partial class TestViewModel : PageViewModel
             IterationsText = s.Iterations.ToString("N0");
             StressProgress = Math.Min(100, s.Elapsed.TotalSeconds / duration.TotalSeconds * 100);
             if (s.MaxTemp is { } m) MaxTempText = $"{m:0} °C";
+            if (s.MaxGpuTemp is { } gm) MaxGpuTempText = $"{gm:0} °C";
+            failed = s.FailedTargets;
+            gpuMissing = s.GpuMissing;
             if (s.Final) return;
+            if (SensorHint.Length == 0 && s.Elapsed.TotalSeconds >= 2)
+            {
+                // explica por que a temperatura aparece como "—"
+                if (targets.HasFlag(StressTargets.Cpu) && s.CpuTemp is null)
+                    SensorHint = !AppServices.IsAdmin ? Loc.T("Test_HintCpuAdmin")
+                        : !Hardware.SensorService.PawnIoInstalled() ? Loc.T("Test_HintCpuDriver") : Loc.T("Test_HintCpuNone");
+                else if (targets.HasFlag(StressTargets.Gpu) && s.GpuTemp is null && !gpuMissing)
+                    SensorHint = Loc.T("Test_HintGpuNone");
+            }
             TempText = s.CpuTemp is { } t ? $"{t:0} °C" : "—";
+            GpuTempText = s.GpuTemp is { } g ? $"{g:0} °C" : "—";
             _tempSeries.Add(s.CpuTemp ?? double.NaN);
             _loadSeries.Add(s.CpuLoad ?? double.NaN);
+            _gpuTempSeries.Add(s.GpuTemp ?? double.NaN);
             TempChart = _tempSeries.ToArray();
             LoadChart = _loadSeries.ToArray();
+            GpuTempChart = _gpuTempSeries.ToArray();
         });
         try
         {
-            var outcome = await Task.Run(() => StressTest.Run(duration, AppServices.Sensors, progress, ct));
+            var outcome = await Task.Run(() => StressTest.Run(duration, AppServices.Sensors, progress, ct, targets));
             (ResultKind, ResultText) = outcome switch
             {
                 StressOutcome.Passed => (1, Loc.T("Test_Passed")),
-                StressOutcome.Failed => (2, Loc.T("Test_Failed")),
+                StressOutcome.Failed => (2, $"{Loc.T("Test_Failed")} [{Names(failed)}]"),
                 StressOutcome.Aborted => (3, Loc.T("Test_Aborted")),
                 _ => (3, Loc.T("Test_Cancelled")),
             };
+            if (gpuMissing) ResultText += " " + Loc.T("Test_GpuSkipped");
+            if (outcome != StressOutcome.Cancelled)
+            {
+                string verdict = outcome switch
+                {
+                    StressOutcome.Passed => "aprovado, 0 erros",
+                    StressOutcome.Failed => $"FALHOU em {Names(failed)}",
+                    _ => "interrompido por temperatura alta",
+                };
+                EventLog.Add("test", $"Estabilidade ({Names(targets)}, {SelectedDuration.Label}): {verdict}; " +
+                                     $"temp. máx. CPU {MaxTempText}, GPU {MaxGpuTempText}");
+            }
         }
         finally
         {

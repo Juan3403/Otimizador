@@ -10,9 +10,9 @@
     <!-- Só o build de distribuição (Release) exige administrador; o de desenvolvimento abre normalmente. -->
     <ApplicationManifest Condition="'$(Configuration)' == 'Release'">app.manifest</ApplicationManifest>
     <RootNamespace>Otimizador.App</RootNamespace>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Product>Otimizador</Product>
     <Company>Juan</Company>
   </PropertyGroup>
@@ -20,6 +20,13 @@
   <PropertyGroup>
     <ApplicationIcon>Assets\Otimizador.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <!-- Os testes (Tests\) ficam na mesma pasta, mas fora do programa. -->
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Assets\Otimizador.ico" />

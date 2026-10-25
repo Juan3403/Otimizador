@@ -117,6 +117,144 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         }
     }
 
+    /// <summary>Teste da memória de vídeo: grava um padrão que depende do endereço e depois confere, contando divergências na GPU.</summary>
+    private sealed class VramTest : IDisposable
+    {
+        private const int Elements = 1 << 25;                  // 128 MB de uint
+        private const int Groups = Elements / (256 * 4);        // cada thread cuida de 4 posições
+        private const string Common = @"
+RWStructuredBuffer<uint> Mem : register(u0);
+RWStructuredBuffer<uint> Bad : register(u1);
+uint H(uint x) { x ^= x >> 16; x *= 0x7feb352d; x ^= x >> 15; x *= 0x846ca68b; x ^= x >> 16; return x; }
+[numthreads(256, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    for (uint k = 0; k < 4; k++)
+    {
+        uint i = id.x * 4 + k;
+        uint want = H(i ^ SALT);
+";
+        private const string Fill = Common + "        Mem[i] = want;\n    }\n}";
+        private const string Verify = Common + "        if (Mem[i] != want) { uint o; InterlockedAdd(Bad[0], 1, o); }\n    }\n}";
+
+        private readonly ID3D11Buffer _mem, _bad, _staging;
+        private readonly ID3D11UnorderedAccessView _memUav, _badUav;
+        private readonly ID3D11ComputeShader[] _fill = new ID3D11ComputeShader[2];
+        private readonly ID3D11ComputeShader[] _verify = new ID3D11ComputeShader[2];
+        private uint _lastBad;
+
+        public VramTest(ID3D11Device device)
+        {
+            _mem = device.CreateBuffer(Desc(Elements * 4, BindFlags.UnorderedAccess, ResourceUsage.Default,
+                CpuAccessFlags.None, ResourceOptionFlags.BufferStructured, 4));
+            _bad = device.CreateBuffer(Desc(16, BindFlags.UnorderedAccess, ResourceUsage.Default,
+                CpuAccessFlags.None, ResourceOptionFlags.BufferStructured, 4));
+            _staging = device.CreateBuffer(Desc(16, BindFlags.None, ResourceUsage.Staging, CpuAccessFlags.Read, ResourceOptionFlags.None, 0));
+            _memUav = Uav(device, _mem, Elements);
+            _badUav = Uav(device, _bad, 4);
+            string[] salts = { "0x1234ABCDu", "0xA5C3F00Du" };
+            for (int i = 0; i < 2; i++)
+            {
+                _fill[i] = Compile(device, Fill.Replace("SALT", salts[i]));
+                _verify[i] = Compile(device, Verify.Replace("SALT", salts[i]));
+            }
+        }
+
+        /// <summary>Confere o padrão da rodada anterior e grava o desta. Retorna quantas posições estavam erradas.</summary>
+        public uint Step(ID3D11DeviceContext ctx, int round, CancellationToken ct)
+        {
+            ctx.CSSetUnorderedAccessView(0u, _memUav);
+            ctx.CSSetUnorderedAccessView(1u, _badUav);
+            if (round > 0)
+            {
+                ctx.CSSetShader(_verify[(round - 1) & 1]);
+                ctx.Dispatch((uint)Groups, 1, 1);
+            }
+            ctx.CSSetShader(_fill[round & 1]);
+            ctx.Dispatch((uint)Groups, 1, 1);
+
+            ctx.CopySubresourceRegion(_staging, 0u, 0u, 0u, 0u, _bad, 0u, new Box(0, 0, 0, 4, 1, 1));
+            var mapped = ctx.Map(_staging, 0u, MapMode.Read, Vortice.Direct3D11.MapFlags.None);
+            uint total = (uint)Marshal.ReadInt32(mapped.DataPointer);
+            ctx.Unmap(_staging, 0u);
+            uint fresh = total - _lastBad;
+            _lastBad = total;
+            return fresh;
+        }
+
+        public void Dispose()
+        {
+            foreach (var s in _fill) s?.Dispose();
+            foreach (var s in _verify) s?.Dispose();
+            _memUav.Dispose(); _badUav.Dispose();
+            _mem.Dispose(); _bad.Dispose(); _staging.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Carga contínua para o teste de estabilidade: repete o cálculo e compara 1024 resultados com os da primeira passada
+    /// (a mesma conta no mesmo chip tem de dar sempre o mesmo número; se mudar, a GPU errou).
+    /// Retorna false se não houver GPU compatível com Direct3D 11.
+    /// </summary>
+    public static bool StressLoop(CancellationToken ct, Action onPass, Action onError)
+    {
+        try
+        {
+            if (D3D11.D3D11CreateDevice(null, DriverType.Hardware, DeviceCreationFlags.None, null, out ID3D11Device? device).Failure || device is null)
+                return false;
+            using (device)
+            {
+                var ctx = device.ImmediateContext;
+                int bytes = ComputeThreads * sizeof(float);
+                using var cs = Compile(device, ComputeShader);
+                using var output = device.CreateBuffer(Desc(bytes, BindFlags.UnorderedAccess, ResourceUsage.Default,
+                    CpuAccessFlags.None, ResourceOptionFlags.BufferStructured, sizeof(float)));
+                using var uav = Uav(device, output, ComputeThreads);
+                using var staging = device.CreateBuffer(Desc(4096, BindFlags.None, ResourceUsage.Staging,
+                    CpuAccessFlags.Read, ResourceOptionFlags.None, 0));
+                ctx.CSSetShader(cs);
+                ctx.CSSetUnorderedAccessView(0u, uav);
+                int groups = ComputeThreads / 256;
+
+                // Memória de vídeo: grava um padrão em 128 MB, e em outra passada confere se tudo continua igual.
+                VramTest? vram = null;
+                try { vram = new VramTest(device); } catch { /* pouca memória de vídeo: segue só com o cálculo */ }
+
+                float[]? baseline = null;
+                var current = new float[1024];
+                int round = 0;
+                try
+                {
+                    while (!ct.IsCancellationRequested)
+                    {
+                        ctx.CSSetShader(cs);
+                        ctx.CSSetUnorderedAccessView(0u, uav);
+                        for (int i = 0; i < 4; i++) ctx.Dispatch((uint)groups, 1, 1);
+                        ctx.CopySubresourceRegion(staging, 0u, 0u, 0u, 0u, output, 0u, new Box(0, 0, 0, 4096, 1, 1));
+                        var mapped = ctx.Map(staging, 0u, MapMode.Read, Vortice.Direct3D11.MapFlags.None);
+                        Marshal.Copy(mapped.DataPointer, current, 0, current.Length);
+                        ctx.Unmap(staging, 0u);
+
+                        if (baseline is null) baseline = (float[])current.Clone();
+                        else if (!current.AsSpan().SequenceEqual(baseline)) onError();
+                        onPass();
+
+                        if (vram is not null && vram.Step(ctx, round++, ct) > 0) onError();
+                    }
+                }
+                finally
+                {
+                    vram?.Dispose();
+                }
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static BenchResult RunCompute(ID3D11Device device, ID3D11DeviceContext ctx, TimeSpan duration, CancellationToken ct)
     {
         int bytes = ComputeThreads * sizeof(float);

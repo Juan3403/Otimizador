@@ -17,6 +17,43 @@ namespace Otimizador.App;
 /// <summary>Verificação sem interface: <c>Otimizador.exe --selftest relatorio.txt</c>. Retorna 0 se tudo passou.</summary>
 public static class SelfTest
 {
+    /// <summary>Só o teste de estabilidade por peça, em combinações, com 2 s cada (no máximo 10 s no total).</summary>
+    public static int RunStress(string reportPath)
+    {
+        var sb = new StringBuilder();
+        int failures = 0;
+        var combos = new (string Name, StressTargets T)[]
+        {
+            ("CPU", StressTargets.Cpu),
+            ("RAM", StressTargets.Memory),
+            ("GPU", StressTargets.Gpu),
+            ("Disco", StressTargets.Disk),
+            ("RAM + GPU", StressTargets.Memory | StressTargets.Gpu),
+        };
+        foreach (var (name, t) in combos)
+        {
+            try
+            {
+                var last = new StressStatus(TimeSpan.Zero, 0, 0, null, null);
+                var outcome = StressTest.Run(TimeSpan.FromSeconds(2), AppServices.Sensors,
+                    new SyncProgress<StressStatus>(s => last = s), CancellationToken.None, t);
+                bool ok = outcome == StressOutcome.Passed && last.Iterations > 0;
+                if (last.GpuMissing) ok = outcome == StressOutcome.Passed; // sem GPU compatível: ignorado
+                if (!ok) failures++;
+                sb.AppendLine($"[{(ok ? "OK" : "FAIL")}] {name}: {outcome}, {last.Iterations} passadas, {last.Errors} erros" +
+                              (last.GpuMissing ? " (GPU indisponível)" : "") +
+                              (last.MaxGpuTemp is { } g ? $", GPU máx {g:0} °C" : ""));
+            }
+            catch (Exception ex)
+            {
+                failures++;
+                sb.AppendLine($"[FAIL] {name}: {ex.GetType().Name}: {ex.Message}");
+            }
+        }
+        File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
+        return failures;
+    }
+
     public static int Run(string reportPath, int stressSeconds = 6)
     {
         var sb = new StringBuilder();

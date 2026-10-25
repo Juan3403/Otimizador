@@ -8,6 +8,14 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        var stressOnly = Array.IndexOf(e.Args, "--stresstest");
+        if (stressOnly >= 0)
+        {
+            var path = stressOnly + 1 < e.Args.Length ? e.Args[stressOnly + 1] : "stresstest.txt";
+            Shutdown(SelfTest.RunStress(path));
+            return;
+        }
+
         var selfTest = Array.IndexOf(e.Args, "--selftest");
         if (selfTest >= 0)
         {

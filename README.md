@@ -22,7 +22,7 @@
 | **Limpeza** | Temporários, caches (Windows, shaders, navegadores), Lixeira e remoção de apps pré-instalados |
 | **Inicialização** | Liga/desliga o que abre junto com o Windows (sem desinstalar nada) |
 | **Segurança** | Antivírus, firewall, BitLocker, Secure Boot, TPM, UAC e atualizações do Windows, com pontuação |
-| **Testar** | Benchmarks de CPU, memória, disco e **GPU (Direct3D 11)**, comparados com o resultado anterior; teste de estabilidade com detecção de erros |
+| **Testar** | Benchmarks de CPU, memória, disco e **GPU (Direct3D 11)**, comparados com o resultado anterior; teste de estabilidade com detecção de erros. Dá para **escolher as peças** (processador, RAM, placa de vídeo, disco), sozinhas ou combinadas, nos dois testes |
 | **Otimizar** | Perfis e 17 ajustes **reversíveis** (privacidade, jogos, serviços, hibernação, DNS...) com ponto de restauração |
 | **Histórico** | Temperatura e uso de 1 h / 24 h / 7 dias e **relatório em HTML** (imprimível em PDF) |
 | **Inventário** | Para empresas: cada PC publica um resumo numa pasta compartilhada e você vê todos numa tela |
@@ -83,10 +83,17 @@ dotnet build
 dotnet run
 ```
 
+Testes automatizados (xUnit, na pasta `Tests/`; também rodam antes de cada Release):
+
+```
+dotnet test Tests/Otimizador.Tests.csproj
+```
+
 Verificação sem interface (retorna 0 se tudo passou):
 
 ```
 Otimizador.exe --selftest relatorio.txt [segundos_de_estabilidade]
+Otimizador.exe --stresstest saida.txt   # estabilidade por peça (CPU, RAM, GPU, disco), 2 s cada
 Otimizador.exe --snapshots pasta        # gera imagens de todas as telas nos dois temas
 ```
 

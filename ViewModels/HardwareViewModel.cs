@@ -122,12 +122,48 @@ public partial class HardwareViewModel : PageViewModel
     {
         var dlg = new SaveFileDialog
         {
-            FileName = $"meu-pc-{DateTime.Now:yyyyMMdd}.txt",
-            Filter = "Texto (*.txt)|*.txt",
+            FileName = $"meu-pc-{DateTime.Now:yyyyMMdd}",
+            Filter = "Texto (*.txt)|*.txt|JSON (*.json)|*.json",
         };
         if (dlg.ShowDialog() != true) return;
-        File.WriteAllText(dlg.FileName, HardwareInfoService.ToText(_sections));
+        bool json = dlg.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+        File.WriteAllText(dlg.FileName, json ? ExportJson() : ExportText(), System.Text.Encoding.UTF8);
         Status = Loc.T("Hw_Exported") + dlg.FileName;
+    }
+
+    private string DiskLine(DiskHealthItem d) =>
+        $"{d.Name} ({d.Subtitle}): {d.Verdict}; temp {d.Temperature}, desgaste {d.Wear}, horas {d.Hours}, erros {d.Errors}";
+
+    private string ExportText()
+    {
+        var text = HardwareInfoService.ToText(_sections);
+        if (Disks.Count > 0) text += $"{Environment.NewLine}[Saúde dos discos]{Environment.NewLine}" + string.Join(Environment.NewLine, Disks.Select(DiskLine));
+        if (Battery is { } b) text += $"{Environment.NewLine}[Bateria]{Environment.NewLine}Saúde {b.Health}, ciclos {b.Cycles}, projetada {b.Design}, carga máx. {b.Full}: {b.Verdict}";
+        return text;
+    }
+
+    /// <summary>Mesmo conteúdo em JSON, bom para comparar PCs ou guardar o inventário da empresa.</summary>
+    private string ExportJson()
+    {
+        var doc = new
+        {
+            machine = Environment.MachineName,
+            date = DateTime.Now.ToString("s"),
+            app = AppInfo.Version.ToString(3),
+            sections = _sections.Select(s => new
+            {
+                key = s.Key,
+                title = s.Title,
+                lines = s.Lines.Select(l => new { label = l.Label, value = l.Value }),
+            }),
+            disks = Disks.Select(d => new { d.Name, d.Subtitle, d.Verdict, d.Temperature, d.Wear, d.Hours, d.Errors }),
+            battery = Battery is { } b ? new { b.Health, b.Cycles, b.Design, b.Full, b.Verdict } : null,
+        };
+        return System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        });
     }
 
     public override void Dispose() => Loc.Instance.PropertyChanged -= OnLocChanged;

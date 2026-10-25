@@ -3,7 +3,7 @@ using Otimizador.App.Alerts;
 
 namespace Otimizador.App.Updates;
 
-/// <summary>Verifica sozinho (no máximo uma vez por dia) se há versão nova, e avisa o resto do app.</summary>
+/// <summary>Verifica sozinho se há versão nova (ao abrir e depois a cada 6 h) e avisa o resto do app.</summary>
 public static class UpdateWatcher
 {
     public static UpdateInfo? Available { get; private set; }
@@ -22,17 +22,21 @@ public static class UpdateWatcher
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(25) };
         timer.Tick += async (_, _) =>
         {
-            timer.Stop();
+            timer.Interval = TimeSpan.FromHours(6);
             var s = Settings.Load();
             if (!s.AutoCheckUpdates || AppInfo.Repo.Length == 0) return;
-            if (s.LastUpdateCheck is { } last && DateTime.Now - last < TimeSpan.FromHours(20)) return;
 
+            // O chip no menu sempre aparece; o aviso (toast) sai uma vez por versão.
             var result = await UpdateService.CheckAsync();
             if (result.State == UpdateState.Available && result.Info is { } info)
             {
                 Set(info);
+                string version = $"{info.Version.Major}.{info.Version.Minor}.{info.Version.Build}";
+                if (s.LastNotifiedVersion == version) return;
+                s.LastNotifiedVersion = version;
+                s.Save();
                 ToastWindow.Show(Loc.T("Atualização disponível", "Update available"),
-                    $"{Loc.T("Versão", "Version")} {info.Version.Major}.{info.Version.Minor}.{info.Version.Build}. {Loc.T("Abra Ajustes para atualizar.", "Open Settings to update.")}");
+                    $"{Loc.T("Versão", "Version")} {version}. {Loc.T("Abra Ajustes para atualizar.", "Open Settings to update.")}");
             }
         };
         timer.Start();

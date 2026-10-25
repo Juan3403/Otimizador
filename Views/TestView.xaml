@@ -45,9 +45,43 @@
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- O que testar -->
+            <Border Grid.ColumnSpan="2" Style="{StaticResource Card}" Margin="6" Padding="22,16" IsEnabled="{Binding IsIdle}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,28,0">
+                        <TextBlock Text="{app:Tr Test_Parts}" Style="{StaticResource TitleMd}" />
+                        <TextBlock Text="{app:Tr Test_PartsSub}" Style="{StaticResource Caption}" MaxWidth="260" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <WrapPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Margin="0,4,26,4">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding UseCpu}" />
+                            <TextBlock Text="{app:Tr Test_PartCpu}" Margin="9,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,26,4">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding UseRam}" />
+                            <TextBlock Text="{app:Tr Test_PartRam}" Margin="9,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,26,4">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding UseGpu}" />
+                            <TextBlock Text="{app:Tr Test_PartGpu}" Margin="9,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,26,4">
+                            <CheckBox Style="{StaticResource SelectCheck}" IsChecked="{Binding UseDisk}" />
+                            <TextBlock Text="{app:Tr Test_PartDisk}" Margin="9,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{app:Tr Test_NoPart}" Foreground="{DynamicResource Danger}" VerticalAlignment="Center"
+                                   Visibility="{Binding HasSelection, Converter={StaticResource IBV}}" />
+                    </WrapPanel>
+                </DockPanel>
+            </Border>
 
             <!-- Teste rápido -->
-            <Border Style="{StaticResource Card}" Margin="6" Padding="22">
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="6" Padding="22">
                 <StackPanel>
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Border Width="40" Height="40" CornerRadius="0" Background="{DynamicResource AccentSoft}">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" FontSize="18" Foreground="{DynamicResource Accent}"
@@ -85,7 +119,7 @@
             </Border>
 
             <!-- Estabilidade -->
-            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="6" Padding="22">
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Margin="6" Padding="22">
                 <StackPanel>
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Border Width="40" Height="40" CornerRadius="0" Background="{DynamicResource SuccessSoft}">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE9F5;" FontSize="18" Foreground="{DynamicResource Success}"
@@ -119,43 +153,61 @@
 
                     <ProgressBar Value="{Binding StressProgress, Mode=OneWay}" Margin="0,18,0,14" />
 
-                    <UniformGrid Columns="4" Margin="0,0,-8,0">
-                        <Border Style="{StaticResource StatTile}">
+                    <UniformGrid Columns="3" Margin="0,0,-8,0">
+                        <Border Style="{StaticResource StatTile}" Margin="0,0,8,8">
                             <StackPanel>
                                 <TextBlock Text="{app:Tr Test_Elapsed}" Style="{StaticResource Caption}" />
                                 <TextBlock Text="{Binding ElapsedText}" FontSize="18" FontWeight="SemiBold" />
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource StatTile}">
+                        <Border Style="{StaticResource StatTile}" Margin="0,0,8,8">
                             <StackPanel>
                                 <TextBlock Text="{app:Tr Test_Errors}" Style="{StaticResource Caption}" />
                                 <TextBlock Text="{Binding ErrorsText}" FontSize="18" FontWeight="SemiBold" />
                             </StackPanel>
                         </Border>
+                        <Border Style="{StaticResource StatTile}" Margin="0,0,8,8">
+                            <StackPanel>
+                                <TextBlock Text="{app:Tr Test_Iterations}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{Binding IterationsText}" FontSize="18" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Text="{app:Tr Test_Temp}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{app:Tr Test_TempCpu}" Style="{StaticResource Caption}" />
                                 <TextBlock Text="{Binding TempText}" FontSize="18" FontWeight="SemiBold" />
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Text="{app:Tr Test_MaxTemp}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{app:Tr Test_MaxCpu}" Style="{StaticResource Caption}" />
                                 <TextBlock Text="{Binding MaxTempText}" FontSize="18" FontWeight="SemiBold" />
                             </StackPanel>
                         </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Text="{app:Tr Test_TempGpu}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{Binding GpuTempText}" FontSize="18" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
                     </UniformGrid>
+
+                    <TextBlock Text="{Binding SensorHint}" Style="{StaticResource Caption}" TextWrapping="Wrap" Foreground="{DynamicResource Warning}"
+                               Margin="0,4,0,0" Visibility="{Binding SensorHint, Converter={StaticResource S2V}}" />
 
                     <Grid Height="150" Margin="0,16,0,0">
                         <ctl:Sparkline Values="{Binding LoadChart}" Stroke="{DynamicResource Accent}" ShowGrid="True"
                                        GridBrush="{DynamicResource ChartGrid}" Capacity="120" />
                         <ctl:Sparkline Values="{Binding TempChart}" Stroke="{DynamicResource Orange}" FillArea="False" Capacity="120" />
+                        <ctl:Sparkline Values="{Binding GpuTempChart}" Stroke="{DynamicResource Success}" FillArea="False" Capacity="120" />
                     </Grid>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <Rectangle Width="8" Height="8" Fill="{DynamicResource Accent}" VerticalAlignment="Center" />
                         <TextBlock Text="{app:Tr Test_Load}" Style="{StaticResource Caption}" Margin="6,0,16,0" />
                         <Rectangle Width="8" Height="8" Fill="{DynamicResource Orange}" VerticalAlignment="Center" />
-                        <TextBlock Text="{app:Tr Test_Temp}" Style="{StaticResource Caption}" Margin="6,0,0,0" />
+                        <TextBlock Text="{app:Tr Test_TempCpu}" Style="{StaticResource Caption}" Margin="6,0,16,0" />
+                        <Rectangle Width="8" Height="8" Fill="{DynamicResource Success}" VerticalAlignment="Center" />
+                        <TextBlock Text="{app:Tr Test_TempGpu}" Style="{StaticResource Caption}" Margin="6,0,0,0" />
                     </StackPanel>
 
                     <Border Margin="0,16,0,0" Padding="16,12" CornerRadius="0" Visibility="{Binding ResultText, Converter={StaticResource S2V}}">

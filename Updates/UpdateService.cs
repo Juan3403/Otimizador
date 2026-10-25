@@ -35,6 +35,18 @@ public static class UpdateService
     /// <summary>Lê o JSON de uma Release do GitHub. Retorna null se o formato não for reconhecido.</summary>
     public static UpdateInfo? ParseRelease(string json)
     {
+        try
+        {
+            return ParseReleaseCore(json);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    private static UpdateInfo? ParseReleaseCore(string json)
+    {
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         if (!root.TryGetProperty("tag_name", out var tagEl)) return null;
@@ -101,6 +113,12 @@ public static class UpdateService
         catch (OperationCanceledException)
         {
             throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return new UpdateCheck(UpdateState.Error, Message: Loc.T(
+                "Sem conexão com a internet (ou o GitHub está fora do ar). Tente de novo mais tarde.",
+                "No internet connection (or GitHub is down). Try again later."));
         }
         catch (Exception ex)
         {

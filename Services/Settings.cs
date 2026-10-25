@@ -21,6 +21,7 @@ public sealed class Settings
     public string? UpdateRepo { get; set; }
     public bool AutoCheckUpdates { get; set; } = true;
     public DateTime? LastUpdateCheck { get; set; }
+    public string? LastNotifiedVersion { get; set; }
 
     // Bandeja e inicialização
     public bool TrayEnabled { get; set; } = true;

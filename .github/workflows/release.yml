@@ -24,6 +24,9 @@ jobs:
       - name: Instalar Inno Setup
         run: choco install innosetup -y --no-progress
 
+      - name: Testes automatizados
+        run: dotnet test Tests/Otimizador.Tests.csproj --nologo
+
       - name: Gerar pacotes
         shell: pwsh
         run: |
