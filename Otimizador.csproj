@@ -10,9 +10,9 @@
     <!-- Só o build de distribuição (Release) exige administrador; o de desenvolvimento abre normalmente. -->
     <ApplicationManifest Condition="'$(Configuration)' == 'Release'">app.manifest</ApplicationManifest>
     <RootNamespace>Otimizador.App</RootNamespace>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
     <Product>Otimizador</Product>
     <Company>Juan</Company>
   </PropertyGroup>
@@ -35,6 +35,7 @@
   </ItemGroup>
 
 </Project>
+
 
 
 
