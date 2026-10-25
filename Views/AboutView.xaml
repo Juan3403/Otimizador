@@ -57,10 +57,10 @@
             <!-- Licença -->
             <Border Style="{StaticResource Card}" Margin="6" Padding="22,18">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Command="{Binding OpenLicenseCommand}" VerticalAlignment="Center">
+                    <Button DockPanel.Dock="Right" Command="{Binding OpenLicenseCommand}" VerticalAlignment="Center" Margin="28,0,0,0">
                         <TextBlock Text="{app:Tr About_LicenseOpen}" />
                     </Button>
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{app:Tr About_License}" Style="{StaticResource TitleMd}" />
                         <TextBlock Text="{app:Tr About_LicenseText}" Style="{StaticResource Body}" Margin="0,4,0,0" />
                     </StackPanel>
