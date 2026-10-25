@@ -16,6 +16,18 @@ public static class SnapshotTool
 {
     private static readonly string[] Pages = { "Dashboard", "Hardware", "Monitor", "Cleanup", "Startup", "Test", "Optimize", "History", "About" };
 
+    /// <summary>Primeiro ScrollViewer com conteúdo maior que a área visível (a rolagem da página aberta).</summary>
+    private static System.Windows.Controls.ScrollViewer? FindScroller(System.Windows.DependencyObject root)
+    {
+        for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is System.Windows.Controls.ScrollViewer sv && sv.ScrollableHeight > 0) return sv;
+            if (FindScroller(child) is { } found) return found;
+        }
+        return null;
+    }
+
     public static async Task RunAsync(MainWindow window, string dir)
     {
         Directory.CreateDirectory(dir);
@@ -50,9 +62,19 @@ public static class SnapshotTool
             await Task.Delay(600);
             if (vm.CurrentPage is TestViewModel test)
             {
-                test.QuickTestCommand.Execute(null);
-                await Task.Delay(24000);
+                test.LoadDemo(); // resultados de exemplo (rodar os testes de verdade levaria mais de 20 s)
+                await Task.Delay(1500);
                 Save(window, Path.Combine(dir, $"{theme}-Test-done.png"));
+
+                // card de renderização: rola a página até o fim
+                var scroller = FindScroller(window);
+                if (scroller is not null)
+                {
+                    scroller.ScrollToEnd();
+                    await Task.Delay(600);
+                    Save(window, Path.Combine(dir, $"{theme}-Test-render.png"));
+                    scroller.ScrollToTop();
+                }
             }
 
             vm.OpenCommand.Execute("Optimize:safe");

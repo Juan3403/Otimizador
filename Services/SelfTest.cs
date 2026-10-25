@@ -17,6 +17,60 @@ namespace Otimizador.App;
 /// <summary>Verificação sem interface: <c>Otimizador.exe --selftest relatorio.txt</c>. Retorna 0 se tudo passou.</summary>
 public static class SelfTest
 {
+    private static void SavePng(RenderSurface s, string path)
+    {
+        if (s.Width == 0 || s.Bgra.Length != s.Width * s.Height * 4) return;
+        var bmp = System.Windows.Media.Imaging.BitmapSource.Create(s.Width, s.Height, 96, 96,
+            System.Windows.Media.PixelFormats.Bgra32, null, s.Bgra, s.Width * 4);
+        var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
+        enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp));
+        using var fs = File.Create(path);
+        enc.Save(fs);
+    }
+
+    /// <summary>Os dois testes de render (CPU e GPU), 4 s cada, salvando a imagem final de cada um ao lado do relatório.</summary>
+    public static int RunRender(string reportPath)
+    {
+        var sb = new StringBuilder();
+        int failures = 0;
+        var none = CancellationToken.None;
+        string basePath = Path.ChangeExtension(reportPath, null);
+        try
+        {
+            var cpuSurface = new RenderSurface();
+            var cpu = CpuRenderBenchmark.Run(TimeSpan.FromSeconds(4), true, cpuSurface, none);
+            bool ok = cpu.Score.Value > 0 && cpu.Verified && cpuSurface.Passes > 0;
+            if (!ok) failures++;
+            sb.AppendLine($"[{(ok ? "OK" : "FAIL")}] Render CPU: {cpu.Score.Value:0} pts, {cpuSurface.Rays / 1e6:0.0} Mraios, {cpuSurface.Passes} passadas, conferida={cpu.Verified}");
+            SavePng(cpuSurface, basePath + "-cpu.png");
+        }
+        catch (Exception ex)
+        {
+            failures++;
+            sb.AppendLine($"[FAIL] Render CPU: {ex.GetType().Name}: {ex.Message}");
+        }
+        try
+        {
+            var gpuSurface = new RenderSurface();
+            var gpu = GpuRenderBenchmark.Run(TimeSpan.FromSeconds(4), gpuSurface, none);
+            if (gpu is null) sb.AppendLine("[OK] Render GPU: sem GPU compatível com Direct3D 11 (ignorado)");
+            else
+            {
+                bool ok = gpu.Value > 0 && gpuSurface.Passes > 0;
+                if (!ok) failures++;
+                sb.AppendLine($"[{(ok ? "OK" : "FAIL")}] Render GPU: {gpu.Value:0.0} FPS em {gpuSurface.Info}, {gpuSurface.Passes} quadros");
+                SavePng(gpuSurface, basePath + "-gpu.png");
+            }
+        }
+        catch (Exception ex)
+        {
+            failures++;
+            sb.AppendLine($"[FAIL] Render GPU: {ex.GetType().Name}: {ex.Message}");
+        }
+        File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
+        return failures;
+    }
+
     /// <summary>Só o teste de estabilidade por peça, em combinações, com 2 s cada (no máximo 10 s no total).</summary>
     public static int RunStress(string reportPath)
     {

@@ -49,17 +49,17 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     Dest[id.x] = Source[id.x] + 1.0f;
 }";
 
-    private static BufferDescription Desc(int bytes, BindFlags bind, ResourceUsage usage, CpuAccessFlags cpu, ResourceOptionFlags opt, int stride) =>
+    internal static BufferDescription Desc(int bytes, BindFlags bind, ResourceUsage usage, CpuAccessFlags cpu, ResourceOptionFlags opt, int stride) =>
         new((uint)bytes, bind, usage, cpu, opt, (uint)stride);
 
-    private static ID3D11ComputeShader Compile(ID3D11Device device, string source)
+    internal static ID3D11ComputeShader Compile(ID3D11Device device, string source)
     {
         Compiler.Compile(source, "CSMain", "gpu-test", "cs_5_0", out var blob, out var errors).CheckError();
         errors?.Dispose();
         using (blob) return device.CreateComputeShader(blob.AsBytes());
     }
 
-    private static ID3D11UnorderedAccessView Uav(ID3D11Device device, ID3D11Buffer buffer, int elements) =>
+    internal static ID3D11UnorderedAccessView Uav(ID3D11Device device, ID3D11Buffer buffer, int elements) =>
         device.CreateUnorderedAccessView(buffer, new UnorderedAccessViewDescription
         {
             Format = Format.Unknown,
@@ -68,7 +68,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         });
 
     /// <summary>Espera a GPU terminar o que foi enviado, copiando um pedaço pequeno para a memória do PC.</summary>
-    private static void Sync(ID3D11DeviceContext ctx, ID3D11Buffer staging, ID3D11Buffer source, int bytes)
+    internal static void Sync(ID3D11DeviceContext ctx, ID3D11Buffer staging, ID3D11Buffer source, int bytes)
     {
         ctx.CopySubresourceRegion(staging, 0u, 0u, 0u, 0u, source, 0u, new Box(0, 0, 0, bytes, 1, 1));
         var mapped = ctx.Map(staging, 0u, MapMode.Read, Vortice.Direct3D11.MapFlags.None);

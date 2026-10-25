@@ -12,7 +12,11 @@
                     Visibility="{Binding Hint, Converter={StaticResource S2V}}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Style="{StaticResource Icon}" Text="&#xE7BA;" Foreground="{DynamicResource Warning}" Margin="0,0,10,0" />
-                    <TextBlock Text="{Binding Hint}" Foreground="{DynamicResource Warning}" TextWrapping="Wrap" MaxWidth="820" />
+                    <TextBlock Text="{Binding Hint}" Foreground="{DynamicResource Warning}" TextWrapping="Wrap" MaxWidth="700" VerticalAlignment="Center" />
+                    <Button Command="{Binding InstallDriverCommand}" Style="{StaticResource PrimaryButton}" Margin="18,0,0,0" Padding="16,7"
+                            VerticalAlignment="Center" Visibility="{Binding CanInstallDriver, Converter={StaticResource B2V}}">
+                        <TextBlock Text="{app:Tr Mon_InstallDriver}" />
+                    </Button>
                 </StackPanel>
             </Border>
 

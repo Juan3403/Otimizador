@@ -190,6 +190,55 @@ public class CatalogTests
     public void New_test_strings_exist(string key) => Assert.True(Strings.Table.ContainsKey(key));
 }
 
+public class RenderTests
+{
+    [Fact]
+    public void Cpu_render_checksum_is_deterministic()
+    {
+        Assert.Equal(CpuRenderBenchmark.Checksum(12), CpuRenderBenchmark.Checksum(12));
+    }
+
+    [Fact]
+    public void Cpu_render_draws_a_real_image_and_scores()
+    {
+        var surface = new RenderSurface();
+        var result = CpuRenderBenchmark.Run(TimeSpan.FromSeconds(0.6), true, surface, CancellationToken.None);
+        Assert.True(result.Verified);
+        Assert.True(result.Score.Value > 0);
+        Assert.Equal(CpuRenderBenchmark.Width * CpuRenderBenchmark.Height * 4, surface.Bgra.Length);
+        // a imagem não pode ser de uma cor só (céu, chão e esferas)
+        var colors = new HashSet<int>();
+        for (int i = 0; i < surface.Bgra.Length; i += 4 * 997) colors.Add(surface.Bgra[i] | surface.Bgra[i + 1] << 8 | surface.Bgra[i + 2] << 16);
+        Assert.True(colors.Count > 20);
+    }
+
+    [Fact]
+    public void Render_strings_exist()
+    {
+        foreach (var key in new[] { "Test_Render", "Test_RenderCpu", "Test_RenderGpu", "Test_CpuRender", "Test_GpuRender" })
+            Assert.True(Strings.Table.ContainsKey(key), key);
+    }
+}
+
+public class DriverTests
+{
+    [Fact]
+    public void PawnIo_installer_check_rejects_missing_and_tampered_files()
+    {
+        Assert.False(Otimizador.App.Hardware.PawnIoInstaller.IsAuthentic(Path.Combine(Path.GetTempPath(), "nao-existe-" + Guid.NewGuid().ToString("N") + ".exe")));
+        string fake = Path.Combine(Path.GetTempPath(), "pawnio-falso-" + Guid.NewGuid().ToString("N") + ".exe");
+        File.WriteAllText(fake, "isto não é o instalador oficial");
+        try { Assert.False(Otimizador.App.Hardware.PawnIoInstaller.IsAuthentic(fake)); }
+        finally { File.Delete(fake); }
+    }
+
+    [Fact]
+    public void PawnIo_expected_hash_is_a_sha256()
+    {
+        Assert.Matches("^[0-9A-F]{64}$", Otimizador.App.Hardware.PawnIoInstaller.ExpectedSha256);
+    }
+}
+
 public class StressTests
 {
     [Fact]

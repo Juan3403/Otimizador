@@ -54,6 +54,17 @@ public sealed class SensorService : IDisposable
         }
     }
 
+    /// <summary>Fecha e reabre a leitura (depois de instalar o driver, para as temperaturas aparecerem sem reiniciar o app).</summary>
+    public void Reopen()
+    {
+        lock (_lock)
+        {
+            try { _computer?.Close(); } catch { /* já estava fechado */ }
+            _computer = null;
+            _failed = false;
+        }
+    }
+
     public List<SensorReading> Snapshot()
     {
         lock (_lock)
